@@ -19,20 +19,40 @@ interface MapBoundsProps {
 function MapBounds({ locations }: MapBoundsProps) {
   const map = useMap();
   const initialZoomDone = useRef(false);
-
+  const rectangleRef = useRef<L.Rectangle | null>(null);
+  const boundsRef = useRef<L.LatLngBounds | null>(null);
+  
   useEffect(() => {
     if (!initialZoomDone.current) {
       // Set initial center and zoom
       const initialCenter = L.latLng(32.63012300670739, 53.51440429687501);
       map.setView(initialCenter, 6);
-
+      
       // Then, after a short delay, zoom in smoothly to the center of locations if they exist
       setTimeout(() => {
         if (locations.length > 0) {
           const bounds = L.latLngBounds(
             locations.map((loc) => [loc.geo.lat, loc.geo.lng])
           );
+          boundsRef.current = bounds; // Store the bounds for later comparison
           const center = bounds.getCenter();
+          
+          // Remove existing rectangle if it exists
+          if (rectangleRef.current) {
+            map.removeLayer(rectangleRef.current);
+          }
+          
+          // Create new rectangle
+          rectangleRef.current = L.rectangle(bounds, {
+            color: '#ff7800',
+            weight: 0.5,
+            // fillColor: '#ff7800',
+            fillOpacity: 0.1,
+            dashArray: '5, 5',
+            interactive: false,
+            fill: false,
+          }).addTo(map);
+          
           map.flyTo(center, 12, {
             duration: 1.5,
             easeLinearity: 0.25,
@@ -45,18 +65,40 @@ function MapBounds({ locations }: MapBoundsProps) {
     // Add event listeners for map movement
     const handleMoveEnd = () => {
       const center = map.getCenter();
-      console.log('Map center coordinates:', {
-        latitude: center.lat,
-        longitude: center.lng,
-      });
+      const currentBounds = map.getBounds();
+      
+      // Check if the current view is outside the original bounds
+      if (boundsRef.current && !boundsRef.current.contains(currentBounds)) {
+        console.log('Map moved outside the original area. New coordinates:', {
+          north: currentBounds.getNorth(),
+          south: currentBounds.getSouth(),
+          east: currentBounds.getEast(),
+          west: currentBounds.getWest(),
+          center: {
+            latitude: center.lat,
+            longitude: center.lng
+          }
+        });
+      }
     };
 
     const handleDragEnd = () => {
       const center = map.getCenter();
-      console.log('Map dragged to:', {
-        latitude: center.lat,
-        longitude: center.lng,
-      });
+      const currentBounds = map.getBounds();
+      
+      // Check if the current view is outside the original bounds
+      if (boundsRef.current && !boundsRef.current.contains(currentBounds)) {
+        console.log('Map dragged outside the original area. New coordinates:', {
+          north: currentBounds.getNorth(),
+          south: currentBounds.getSouth(),
+          east: currentBounds.getEast(),
+          west: currentBounds.getWest(),
+          center: {
+            latitude: center.lat,
+            longitude: center.lng
+          }
+        });
+      }
     };
 
     map.on('moveend', handleMoveEnd);
@@ -65,6 +107,9 @@ function MapBounds({ locations }: MapBoundsProps) {
     return () => {
       map.off('moveend', handleMoveEnd);
       map.off('dragend', handleDragEnd);
+      if (rectangleRef.current) {
+        map.removeLayer(rectangleRef.current);
+      }
     };
   }, [locations, map]);
 
