@@ -1,11 +1,16 @@
+/** @format */
+
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { FaPlus, FaMinus, FaSatellite } from 'react-icons/fa';
+import { FaRegMap } from "react-icons/fa6";
+import { MdOutlineGpsFixed } from "react-icons/md";
 
-import { Location  } from '../types/types';
+import { Location } from '../types/types';
 interface MapBoundsProps {
   locations: Location[];
 }
@@ -14,21 +19,23 @@ interface MapBoundsProps {
 function MapBounds({ locations }: MapBoundsProps) {
   const map = useMap();
   const initialZoomDone = useRef(false);
-  
+
   useEffect(() => {
     if (!initialZoomDone.current) {
       // Set initial center and zoom
       const initialCenter = L.latLng(32.63012300670739, 53.51440429687501);
       map.setView(initialCenter, 6);
-      
+
       // Then, after a short delay, zoom in smoothly to the center of locations if they exist
       setTimeout(() => {
         if (locations.length > 0) {
-          const bounds = L.latLngBounds(locations.map(loc => [loc.geo.lat, loc.geo.lng]));
+          const bounds = L.latLngBounds(
+            locations.map((loc) => [loc.geo.lat, loc.geo.lng])
+          );
           const center = bounds.getCenter();
           map.flyTo(center, 12, {
             duration: 1.5,
-            easeLinearity: 0.25
+            easeLinearity: 0.25,
           });
         }
         initialZoomDone.current = true;
@@ -40,7 +47,7 @@ function MapBounds({ locations }: MapBoundsProps) {
       const center = map.getCenter();
       console.log('Map center coordinates:', {
         latitude: center.lat,
-        longitude: center.lng
+        longitude: center.lng,
       });
     };
 
@@ -48,7 +55,7 @@ function MapBounds({ locations }: MapBoundsProps) {
       const center = map.getCenter();
       console.log('Map dragged to:', {
         latitude: center.lat,
-        longitude: center.lng
+        longitude: center.lng,
       });
     };
 
@@ -87,23 +94,29 @@ function MarkersWrapper({ locations }: ClusterMapProps) {
   }, [map]);
 
   // Function to calculate distance between two points in pixels at current zoom level
-  const getPixelDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const getPixelDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ) => {
     const point1 = map.latLngToContainerPoint([lat1, lon1]);
     const point2 = map.latLngToContainerPoint([lat2, lon2]);
     return Math.sqrt(
-      Math.pow(point2.x - point1.x, 2) + 
-      Math.pow(point2.y - point1.y, 2)
+      Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2)
     );
   };
 
   // Function to check if a location is too close to any other location
   const isLocationCrowded = (location: Location, allLocations: Location[]) => {
     const MIN_PIXEL_DISTANCE = 40; // Minimum distance in pixels between markers
-    return allLocations.some(otherLoc => {
+    return allLocations.some((otherLoc) => {
       if (otherLoc === location) return false;
       const pixelDistance = getPixelDistance(
-        location.geo.lat, location.geo.lng,
-        otherLoc.geo.lat, otherLoc.geo.lng
+        location.geo.lat,
+        location.geo.lng,
+        otherLoc.geo.lat,
+        otherLoc.geo.lng
       );
       return pixelDistance < MIN_PIXEL_DISTANCE;
     });
@@ -111,7 +124,7 @@ function MarkersWrapper({ locations }: ClusterMapProps) {
 
   useEffect(() => {
     // Clean up previous markers
-    markersRef.current.forEach(marker => {
+    markersRef.current.forEach((marker) => {
       if (marker) {
         map.removeLayer(marker);
       }
@@ -126,30 +139,37 @@ function MarkersWrapper({ locations }: ClusterMapProps) {
       const isCrowded = isLocationCrowded(location, sortedLocations);
       // Show price only if it's not crowded and we're zoomed in enough
       // For the highest price location, always show the price if we're zoomed in enough
-      const showPrice = currentZoom >= MIN_ZOOM_FOR_PRICES && (!isCrowded || index === 0);
-      
+      const showPrice =
+        currentZoom >= MIN_ZOOM_FOR_PRICES && (!isCrowded || index === 0);
+
       const marker = L.marker([location.geo.lat, location.geo.lng], {
         icon: L.divIcon({
           html: `
             <div class="price-marker">
-              ${showPrice ? `<span class="price-text">${location.price.toLocaleString()}</span>` : `
-                 <div class="marker-circle overflow-hidden ${index === 0 && !showPrice ? 'marker-circle-highlight' : ''}">
+              ${
+                showPrice
+                  ? `<span class="price-text">${location.price.toLocaleString()}</span>`
+                  : `
+                 <div class="marker-circle overflow-hidden ${
+                   index === 0 && !showPrice ? 'marker-circle-highlight' : ''
+                 }">
                  <div class="hover-price">${location.price.toLocaleString()}</div>
-              </div>`}
+              </div>`
+              }
             </div>`,
           className: 'custom-price-marker',
           iconSize: L.point(80, 40),
           iconAnchor: L.point(40, 40),
         }),
-        zIndexOffset: index === 0 ? 1000 : 0 // Ensure highest price marker stays on top
+        zIndexOffset: index === 0 ? 1000 : 0, // Ensure highest price marker stays on top
       });
-      
+
       marker.addTo(map);
       markersRef.current.push(marker);
     });
 
     return () => {
-      markersRef.current.forEach(marker => {
+      markersRef.current.forEach((marker) => {
         if (marker) {
           map.removeLayer(marker);
         }
@@ -160,7 +180,82 @@ function MarkersWrapper({ locations }: ClusterMapProps) {
   return null;
 }
 
+interface MapControlsProps {
+  setMapView: (view: 'map' | 'satellite') => void;
+  mapView: 'map' | 'satellite';
+}
+
+function MapControls({ setMapView, mapView }: MapControlsProps) {
+  const map = useMap();
+
+  const zoomIn = () => {
+    map.zoomIn();
+  };
+
+  const zoomOut = () => {
+    map.zoomOut();
+  };
+
+  const locateMe = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          map.flyTo([position.coords.latitude, position.coords.longitude], 15);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+        }
+      );
+    }
+  };
+
+  return (
+    <div className='absolute bottom-10 right-4 flex flex-col gap-2 z-[1000]'>
+      <div className='flex flex-col gap-0.5'>
+        <button
+          onClick={zoomIn}
+          className='bg-white/90 hover:bg-white text-black px-3 py-4 flex items-center justify-center rounded-t-full cursor-pointer'
+        >
+          <FaPlus size={18} />
+        </button>
+        <button
+          onClick={zoomOut}
+          className='bg-white/90 hover:bg-white text-black px-3 py-4 flex items-center justify-center rounded-b-full cursor-pointer'
+        >
+          <FaMinus size={18} />
+        </button>
+      </div>
+      <div className='flex flex-col gap-0.5'>
+        <button
+          onClick={() => setMapView('satellite')}
+          className={`px-3 py-4 flex items-center justify-center rounded-t-full cursor-pointer ${
+            mapView === 'satellite' ? 'text-white bg-gray-900' : 'text-black bg-white'
+          }`}
+        >
+          <FaSatellite size={18} />
+        </button>
+        <button
+          onClick={() => setMapView('map')}
+          className={`px-3 py-4 flex items-center justify-center rounded-b-full cursor-pointer ${
+            mapView === 'map' ? 'text-white bg-gray-900' : 'text-black bg-white'
+          }`}
+        >
+          <FaRegMap size={18} />
+        </button>
+      </div>
+      <button
+        onClick={locateMe}
+        className='text-white/90 bg-gray-900 px-3 py-3 flex items-center justify-center rounded-full cursor-pointer'
+      >
+        <MdOutlineGpsFixed size={18} />
+      </button>
+    </div>
+  );
+}
+
 export default function ClusterMap({ locations }: ClusterMapProps) {
+  const [mapView, setMapView] = useState<'map' | 'satellite'>('map');
+
   return (
     <>
       <style jsx global>{`
@@ -175,8 +270,8 @@ export default function ClusterMap({ locations }: ClusterMapProps) {
           height: 24px;
           background: white;
           border-radius: 50%;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-          border: 2px solid rgba(0,0,0,0.2);
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+          border: 2px solid rgba(0, 0, 0, 0.2);
           position: relative;
           transition: all 0.3s ease;
           cursor: pointer;
@@ -189,7 +284,7 @@ export default function ClusterMap({ locations }: ClusterMapProps) {
           height: 24px;
           transform: scale(1.1);
           border-color: black;
-          box-shadow: 0 3px 7px rgba(0,0,0,0.4);
+          box-shadow: 0 3px 7px rgba(0, 0, 0, 0.4);
           border-radius: 10px;
         }
         .hover-price {
@@ -203,12 +298,11 @@ export default function ClusterMap({ locations }: ClusterMapProps) {
         .marker-circle:hover .hover-price {
           opacity: 1;
           visibility: visible;
-    
         }
         .marker-circle-highlight {
           background: white;
           border: 2px solid black;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
         }
         .price-text {
           background: black;
@@ -216,7 +310,7 @@ export default function ClusterMap({ locations }: ClusterMapProps) {
           border-radius: 20px;
           padding: 2px 8px;
           font-weight: bold;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
           white-space: nowrap;
           text-align: center;
           font-size: 0.875rem;
@@ -238,14 +332,23 @@ export default function ClusterMap({ locations }: ClusterMapProps) {
         scrollWheelZoom={true}
         maxZoom={18}
         minZoom={3}
+        zoomControl={false}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        {mapView === 'map' ? (
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+          />
+        ) : (
+          <TileLayer
+            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+            url='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+          />
+        )}
         <MapBounds locations={locations} />
         <MarkersWrapper locations={locations} />
+        <MapControls setMapView={setMapView} mapView={mapView} />
       </MapContainer>
     </>
   );
-} 
+}
