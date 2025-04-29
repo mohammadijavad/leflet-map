@@ -100,7 +100,7 @@ export const locations = [
           {
             "name": "3247530241101225044.jpg",
             "preview": "UMB;2T~p?H?H_M.7-p%L%g-:%Lt7?u-;%Mxu",
-            "url": "https://storage.jajiga.com/public/pictures/medium/3247530241101225044.jpg"
+            "url": "https://storage.jajiga.com/public/pictures/medium/3142767220508160923.jpg"
           }
         ]
       },
@@ -164,7 +164,7 @@ export const locations = [
           {
             "name": "3153062250425181537.jpg",
             "preview": "UlGlIw~X%Nxv~W-;xvt8sms.t7jut7oexaoK",
-            "url": "https://storage.jajiga.com/public/pictures/medium/3153062250425181537.jpg"
+            "url": "https://storage.jajiga.com/public/pictures/medium/3142767220508160923.jpg"
           }
         ]
       },
@@ -228,7 +228,7 @@ export const locations = [
           {
             "name": "3151889200527224019.jpg",
             "preview": "UVD]xY-pM{xv.Tt7M{W=NgkCofbIxvs:xut7",
-            "url": "https://storage.jajiga.com/public/pictures/medium/3151889200527224019.jpg"
+            "url": "https://storage.jajiga.com/public/pictures/medium/3142767220508160923.jpg"
           }
         ]
       },
@@ -292,7 +292,7 @@ export const locations = [
           {
             "name": "3227842240405162947.jpg",
             "preview": "UKE36c^*r?-:_M%MIUR*yCRjM{of_2aKt7%M",
-            "url": "https://storage.jajiga.com/public/pictures/medium/3227842240405162947.jpg"
+            "url": "https://storage.jajiga.com/public/pictures/medium/3142767220508160923.jpg"
           }
         ]
       },
@@ -362,7 +362,7 @@ export const locations = [
           {
             "name": "3233273240525124603.jpg",
             "preview": "UoGb|;%MWB%M_4tRofxu%NWCt7t7?bWBayt7",
-            "url": "https://storage.jajiga.com/public/pictures/medium/3233273240525124603.jpg"
+            "url": "https://storage.jajiga.com/public/pictures/medium/3142767220508160923.jpg"
           }
         ]
       },
@@ -426,7 +426,7 @@ export const locations = [
           {
             "name": "3148440230423135302.jpg",
             "preview": "UaGb6U?tXk%f_M%foytQyCtQWUkC^*oyNZt6",
-            "url": "https://storage.jajiga.com/public/pictures/medium/3148440230423135302.jpg"
+            "url": "https://storage.jajiga.com/public/pictures/medium/3142767220508160923.jpg"
           }
         ]
       },

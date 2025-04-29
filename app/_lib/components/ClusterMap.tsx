@@ -118,9 +118,10 @@ function MapBounds({ locations }: MapBoundsProps) {
 
 interface ClusterMapProps {
   locations: Location[];
+  selectedLocationId?: number | null;
 }
 
-function MarkersWrapper({ locations }: ClusterMapProps) {
+function MarkersWrapper({ locations, selectedLocationId }: ClusterMapProps) {
   const map = useMap();
   const markersRef = useRef<L.Marker[]>([]);
   const [currentZoom, setCurrentZoom] = useState(map.getZoom());
@@ -190,13 +191,13 @@ function MarkersWrapper({ locations }: ClusterMapProps) {
       const marker = L.marker([location.geo.lat, location.geo.lng], {
         icon: L.divIcon({
           html: `
-            <div class="price-marker">
+            <div class="price-marker ${selectedLocationId === location.id ? 'price-marker-highlight' : ''}">
               ${
                 showPrice
-                  ? `<span class="price-text">${location.price.toLocaleString()}</span>`
+                  ? `<span class="price-text ${selectedLocationId === location.id ? 'price-text-highlight' : ''}">${location.price.toLocaleString()}</span>`
                   : `
-                 <div class="marker-circle overflow-hidden ${
-                   index === 0 && !showPrice ? 'marker-circle-highlight' : ''
+                 <div class="marker-circle ${
+                   (index === 0 && !showPrice) || selectedLocationId === location.id ? 'marker-circle-highlight' : ''
                  }">
                  <div class="hover-price">${location.price.toLocaleString()}</div>
               </div>`
@@ -206,7 +207,7 @@ function MarkersWrapper({ locations }: ClusterMapProps) {
           iconSize: L.point(80, 40),
           iconAnchor: L.point(40, 40),
         }),
-        zIndexOffset: index === 0 ? 1000 : 0, // Ensure highest price marker stays on top
+        zIndexOffset: selectedLocationId === location.id ? 2000 : (index === 0 ? 1000 : 0),
       });
 
       marker.addTo(map);
@@ -220,7 +221,7 @@ function MarkersWrapper({ locations }: ClusterMapProps) {
         }
       });
     };
-  }, [locations, map, currentZoom]);
+  }, [locations, map, currentZoom, selectedLocationId]);
 
   return null;
 }
@@ -298,7 +299,7 @@ function MapControls({ setMapView, mapView }: MapControlsProps) {
   );
 }
 
-export default function ClusterMap({ locations }: ClusterMapProps) {
+export default function ClusterMap({ locations, selectedLocationId }: ClusterMapProps) {
   const [mapView, setMapView] = useState<'map' | 'satellite'>('map');
 
   return (
@@ -318,19 +319,32 @@ export default function ClusterMap({ locations }: ClusterMapProps) {
           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
           border: 2px solid rgba(0, 0, 0, 0.2);
           position: relative;
-          transition: all 0.3s ease;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
         }
-        .marker-circle:hover {
+        .marker-circle:hover,
+        .marker-circle-highlight {
           width: 80px;
           height: 24px;
           transform: scale(1.1);
           border-color: black;
           box-shadow: 0 3px 7px rgba(0, 0, 0, 0.4);
           border-radius: 10px;
+          background-color: #ffeb3b;
+           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .marker-circle-highlight {
+          width: 80px !important;
+          height: 24px !important;
+          transform: scale(1.1) !important;
+          border-color: black !important;
+          box-shadow: 0 3px 7px rgba(0, 0, 0, 0.4) !important;
+          border-radius: 10px !important;
+          background-color: #ffeb3b !important;
+           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .hover-price {
           color: black;
@@ -340,14 +354,10 @@ export default function ClusterMap({ locations }: ClusterMapProps) {
           pointer-events: none;
           z-index: 1000;
         }
-        .marker-circle:hover .hover-price {
+        .marker-circle:hover .hover-price,
+        .marker-circle-highlight .hover-price {
           opacity: 1;
           visibility: visible;
-        }
-        .marker-circle-highlight {
-          background: white;
-          border: 2px solid black;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
         }
         .price-text {
           background: black;
@@ -364,6 +374,22 @@ export default function ClusterMap({ locations }: ClusterMapProps) {
           left: 50%;
           transform: translateX(-50%);
           z-index: 1000;
+        }
+        .price-text-highlight {
+          background: #ffeb3b !important;
+          color: black;
+          z-index: 2000 !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .price-marker-highlight {
+          z-index: 2000 !important;
+           transition: all 0.3s ease;
+        }
+        .price-marker-highlight .price-text {
+          background: #ffeb3b !important;
+          color: black;
+          z-index: 2000 !important;
+           transition: all 0.3s ease;
         }
         .custom-price-marker {
           background: none;
@@ -391,7 +417,7 @@ export default function ClusterMap({ locations }: ClusterMapProps) {
           />
         )}
         <MapBounds locations={locations} />
-        <MarkersWrapper locations={locations} />
+        <MarkersWrapper locations={locations} selectedLocationId={selectedLocationId} />
         <MapControls setMapView={setMapView} mapView={mapView} />
       </MapContainer>
     </>
